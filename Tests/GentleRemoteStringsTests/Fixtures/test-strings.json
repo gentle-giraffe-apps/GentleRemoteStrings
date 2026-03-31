@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "locale": "en-US",
+  "generatedAt": "2026-03-31T00:00:00Z",
+  "strings": {
+    "greeting": {
+      "text": "Hello",
+      "accessibility": {
+        "label": "Greeting message"
+      }
+    },
+    "cached.key": {
+      "text": "Cached Value"
+    },
+    "remote.key": {
+      "text": "Remote Value"
+    },
+    "with_a11y": {
+      "text": "Button",
+      "accessibility": {
+        "label": "Tap the button",
+        "hint": "Does a thing"
+      }
+    },
+    "no_a11y": {
+      "text": "Plain Text"
+    },
+    "fallback.default": {
+      "text": "Default"
+    },
+    "fallback.cached": {
+      "text": "Cached"
+    },
+    "fallback.remote": {
+      "text": "Remote"
+    },
+    "fallback.only_default": {
+      "text": "Only In Defaults"
+    }
+  }
+}
