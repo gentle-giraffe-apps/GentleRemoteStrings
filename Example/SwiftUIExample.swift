@@ -2,15 +2,17 @@
 /// This is illustrative — adapt to your app's architecture.
 
 import SwiftUI
+import Observation
 import GentleRemoteStrings
 
 // MARK: - View Model
 
 @MainActor
-final class ContentViewModel: ObservableObject {
-    @Published var continueText = ""
-    @Published var continueLabel = ""
-    @Published var logoutText = ""
+@Observable
+final class ContentViewModel {
+    var continueText = ""
+    var continueLabel = ""
+    var logoutText = ""
 
     private let strings: RemoteStringsService
 
@@ -40,10 +42,10 @@ final class ContentViewModel: ObservableObject {
 // MARK: - View
 
 struct ContentView: View {
-    @StateObject private var viewModel: ContentViewModel
+    @State private var viewModel: ContentViewModel
 
     init(strings: RemoteStringsService) {
-        _viewModel = StateObject(wrappedValue: ContentViewModel(strings: strings))
+        _viewModel = State(wrappedValue: ContentViewModel(strings: strings))
     }
 
     var body: some View {
