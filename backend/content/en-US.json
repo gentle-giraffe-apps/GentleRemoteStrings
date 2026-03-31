@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "locale": "en-US",
+  "generatedAt": "2026-03-31T00:00:00Z",
+  "strings": {
+    "checkout.continue": {
+      "text": "Continue",
+      "accessibility": {
+        "label": "Continue to payment",
+        "hint": "Navigates to the payment step"
+      }
+    },
+    "checkout.pay": {
+      "text": "Pay Now",
+      "accessibility": {
+        "label": "Pay now",
+        "hint": "Submits your payment"
+      }
+    },
+    "profile.logout": {
+      "text": "Log Out",
+      "accessibility": {
+        "label": "Log out",
+        "hint": "Signs you out of your account"
+      }
+    },
+    "profile.edit": {
+      "text": "Edit Profile"
+    },
+    "home.welcome": {
+      "text": "Welcome back",
+      "accessibility": {
+        "label": "Welcome back"
+      }
+    }
+  }
+}
