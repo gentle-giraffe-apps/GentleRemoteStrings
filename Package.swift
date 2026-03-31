@@ -20,7 +20,8 @@ let package = Package(
         ),
         .testTarget(
             name: "GentleRemoteStringsTests",
-            dependencies: ["GentleRemoteStrings"]
+            dependencies: ["GentleRemoteStrings"],
+            resources: [.copy("Fixtures")]
         )
     ]
 )

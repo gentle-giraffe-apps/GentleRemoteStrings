@@ -65,6 +65,29 @@ final class FakeLogger: RemoteStringsLogging, @unchecked Sendable {
 enum TestData {
     static let endpoint = URL(string: "https://example.com/v1/strings")!
 
+    /// The canonical test fixture loaded from Fixtures/test-strings.json.
+    static let fixture: RemoteStringsPayload = {
+        let url = Bundle.module.url(forResource: "test-strings", withExtension: "json", subdirectory: "Fixtures")!
+        let data = try! Data(contentsOf: url)
+        return try! JSONDecoder().decode(RemoteStringsPayload.self, from: data)
+    }()
+
+    /// Returns the fixture entry for the given key, or crashes if missing.
+    static func fixtureEntry(_ key: String) -> RemoteStringEntry {
+        fixture.strings[key]!
+    }
+
+    /// Returns a payload containing only the specified keys from the fixture.
+    static func fixturePayload(keys: [String], schemaVersion: Int? = nil) -> RemoteStringsPayload {
+        let filtered = fixture.strings.filter { keys.contains($0.key) }
+        return RemoteStringsPayload(
+            schemaVersion: schemaVersion ?? fixture.schemaVersion,
+            locale: fixture.locale,
+            generatedAt: fixture.generatedAt,
+            strings: filtered
+        )
+    }
+
     static func payload(strings: [String: RemoteStringEntry] = [:], schemaVersion: Int = 1) -> RemoteStringsPayload {
         RemoteStringsPayload(
             schemaVersion: schemaVersion,

@@ -33,12 +33,10 @@ final class RemoteStringsServiceTests: XCTestCase {
     // MARK: - Bundled defaults fallback
 
     func testFallsBackToBundledDefaults() async {
-        let defaults = FakeDefaults(payload: TestData.payload(strings: [
-            "greeting": TestData.entry("Hello")
-        ]))
+        let defaults = FakeDefaults(payload: TestData.fixturePayload(keys: ["greeting"]))
         let (service, _, _, _) = makeService(defaults: defaults)
         let value = await service.string(for: "greeting")
-        XCTAssertEqual(value.text, "Hello")
+        XCTAssertEqual(value.text, TestData.fixtureEntry("greeting").text)
     }
 
     // MARK: - Cache fallback
@@ -46,43 +44,38 @@ final class RemoteStringsServiceTests: XCTestCase {
     func testLoadsFromCacheOnFirstAccess() async {
         let cache = FakeCache()
         cache.stored = CachedPayload(
-            payload: TestData.payload(strings: [
-                "cached.key": TestData.entry("Cached Value")
-            ]),
+            payload: TestData.fixturePayload(keys: ["cached.key"]),
             etag: "\"abc\"",
             fetchedAt: Date()
         )
         let (service, _, _, _) = makeService(cache: cache)
         let value = await service.string(for: "cached.key")
-        XCTAssertEqual(value.text, "Cached Value")
+        XCTAssertEqual(value.text, TestData.fixtureEntry("cached.key").text)
     }
 
     // MARK: - Cache beats defaults
 
     func testCachedPayloadTakesPrecedenceOverDefaults() async {
-        let defaults = FakeDefaults(payload: TestData.payload(strings: [
-            "key": TestData.entry("Default")
-        ]))
+        let defaultsPayload = TestData.payload(strings: [
+            "key": TestData.fixtureEntry("fallback.default")
+        ])
+        let cachedPayload = TestData.payload(strings: [
+            "key": TestData.fixtureEntry("fallback.cached")
+        ])
+        let defaults = FakeDefaults(payload: defaultsPayload)
         let cache = FakeCache()
-        cache.stored = CachedPayload(
-            payload: TestData.payload(strings: [
-                "key": TestData.entry("Cached")
-            ]),
-            etag: nil,
-            fetchedAt: Date()
-        )
+        cache.stored = CachedPayload(payload: cachedPayload, etag: nil, fetchedAt: Date())
+
         let (service, _, _, _) = makeService(cache: cache, defaults: defaults)
         let value = await service.string(for: "key")
-        XCTAssertEqual(value.text, "Cached")
+        XCTAssertEqual(value.text, TestData.fixtureEntry("fallback.cached").text)
     }
 
     // MARK: - Refresh
 
     func testRefreshUpdatesInMemoryPayload() async {
         let fetcher = FakeFetcher()
-        let remotePayload = TestData.payload(strings: [
-            "remote.key": TestData.entry("Remote Value")
-        ])
+        let remotePayload = TestData.fixturePayload(keys: ["remote.key"])
         fetcher.result = FetchResult(
             data: TestData.encodedPayload(remotePayload),
             etag: "\"new\"",
@@ -93,15 +86,13 @@ final class RemoteStringsServiceTests: XCTestCase {
         await service.refresh()
 
         let value = await service.string(for: "remote.key")
-        XCTAssertEqual(value.text, "Remote Value")
+        XCTAssertEqual(value.text, TestData.fixtureEntry("remote.key").text)
         XCTAssertNotNil(cache.savedPayload)
     }
 
     func testRefreshSavesToCache() async {
         let fetcher = FakeFetcher()
-        let remotePayload = TestData.payload(strings: [
-            "key": TestData.entry("Value")
-        ])
+        let remotePayload = TestData.fixturePayload(keys: ["remote.key"])
         fetcher.result = FetchResult(
             data: TestData.encodedPayload(remotePayload),
             etag: "\"etag1\"",
@@ -121,7 +112,7 @@ final class RemoteStringsServiceTests: XCTestCase {
     func testRefreshSendsEtagFromCache() async {
         let cache = FakeCache()
         cache.stored = CachedPayload(
-            payload: TestData.payload(strings: ["k": TestData.entry("v")]),
+            payload: TestData.fixturePayload(keys: ["cached.key"]),
             etag: "\"cached-etag\"",
             fetchedAt: Date()
         )
@@ -131,7 +122,7 @@ final class RemoteStringsServiceTests: XCTestCase {
         let (service, _, _, _) = makeService(fetcher: fetcher, cache: cache)
 
         // Force cache load
-        _ = await service.string(for: "k")
+        _ = await service.string(for: "cached.key")
         await service.refresh()
 
         XCTAssertEqual(fetcher.lastRequestedEtag, "\"cached-etag\"")
@@ -140,7 +131,7 @@ final class RemoteStringsServiceTests: XCTestCase {
     func test304DoesNotChangePayload() async {
         let cache = FakeCache()
         cache.stored = CachedPayload(
-            payload: TestData.payload(strings: ["k": TestData.entry("Original")]),
+            payload: TestData.fixturePayload(keys: ["cached.key"]),
             etag: "\"etag\"",
             fetchedAt: Date()
         )
@@ -149,11 +140,11 @@ final class RemoteStringsServiceTests: XCTestCase {
 
         let (service, _, savedCache, _) = makeService(fetcher: fetcher, cache: cache)
 
-        _ = await service.string(for: "k")
+        _ = await service.string(for: "cached.key")
         await service.refresh()
 
-        let value = await service.string(for: "k")
-        XCTAssertEqual(value.text, "Original")
+        let value = await service.string(for: "cached.key")
+        XCTAssertEqual(value.text, TestData.fixtureEntry("cached.key").text)
         XCTAssertNil(savedCache.savedPayload) // Nothing new saved
     }
 
@@ -162,7 +153,7 @@ final class RemoteStringsServiceTests: XCTestCase {
     func testRefreshFailurePreservesExistingPayload() async {
         let cache = FakeCache()
         cache.stored = CachedPayload(
-            payload: TestData.payload(strings: ["k": TestData.entry("Cached")]),
+            payload: TestData.fixturePayload(keys: ["cached.key"]),
             etag: nil,
             fetchedAt: Date()
         )
@@ -171,62 +162,52 @@ final class RemoteStringsServiceTests: XCTestCase {
 
         let (service, _, _, _) = makeService(fetcher: fetcher, cache: cache)
 
-        _ = await service.string(for: "k")
+        _ = await service.string(for: "cached.key")
         await service.refresh()
 
-        let value = await service.string(for: "k")
-        XCTAssertEqual(value.text, "Cached")
+        let value = await service.string(for: "cached.key")
+        XCTAssertEqual(value.text, TestData.fixtureEntry("cached.key").text)
     }
 
     // MARK: - Unsupported schema version
 
     func testRejectsUnsupportedSchemaVersion() async {
         let fetcher = FakeFetcher()
-        let futurePayload = TestData.payload(
-            strings: ["k": TestData.entry("Future")],
-            schemaVersion: 99
-        )
+        let futurePayload = TestData.fixturePayload(keys: ["remote.key"], schemaVersion: 99)
         fetcher.result = FetchResult(
             data: TestData.encodedPayload(futurePayload),
             etag: nil,
             notModified: false
         )
-        let defaults = FakeDefaults(payload: TestData.payload(strings: [
-            "k": TestData.entry("Default")
-        ]))
+        let defaults = FakeDefaults(payload: TestData.fixturePayload(keys: ["greeting"]))
         let (service, _, _, logger) = makeService(fetcher: fetcher, defaults: defaults)
 
         await service.refresh()
 
-        let value = await service.string(for: "k")
-        XCTAssertEqual(value.text, "Default")
+        let value = await service.string(for: "greeting")
+        XCTAssertEqual(value.text, TestData.fixtureEntry("greeting").text)
         XCTAssertTrue(logger.messages.contains { $0.contains("Unsupported schema version") })
     }
 
     func testRejectsCachedPayloadWithUnsupportedSchema() async {
         let cache = FakeCache()
         cache.stored = CachedPayload(
-            payload: TestData.payload(strings: ["k": TestData.entry("Old")], schemaVersion: 99),
+            payload: TestData.fixturePayload(keys: ["cached.key"], schemaVersion: 99),
             etag: nil,
             fetchedAt: Date()
         )
-        let defaults = FakeDefaults(payload: TestData.payload(strings: [
-            "k": TestData.entry("Default")
-        ]))
+        let defaults = FakeDefaults(payload: TestData.fixturePayload(keys: ["greeting"]))
         let (service, _, _, _) = makeService(cache: cache, defaults: defaults)
 
-        let value = await service.string(for: "k")
-        XCTAssertEqual(value.text, "Default")
+        let value = await service.string(for: "greeting")
+        XCTAssertEqual(value.text, TestData.fixtureEntry("greeting").text)
     }
 
     // MARK: - Accessibility
 
     func testAccessibilityLabelOrDefault() async {
         let fetcher = FakeFetcher()
-        let payload = TestData.payload(strings: [
-            "with_a11y": TestData.entry("Button", label: "Tap the button", hint: "Does a thing"),
-            "no_a11y": TestData.entry("Plain Text")
-        ])
+        let payload = TestData.fixturePayload(keys: ["with_a11y", "no_a11y"])
         fetcher.result = FetchResult(
             data: TestData.encodedPayload(payload),
             etag: nil,
@@ -236,11 +217,11 @@ final class RemoteStringsServiceTests: XCTestCase {
         await service.refresh()
 
         let with = await service.string(for: "with_a11y")
-        XCTAssertEqual(with.labelOrDefault, "Tap the button")
-        XCTAssertEqual(with.hintOrEmpty, "Does a thing")
+        XCTAssertEqual(with.labelOrDefault, TestData.fixtureEntry("with_a11y").accessibility!.label)
+        XCTAssertEqual(with.hintOrEmpty, TestData.fixtureEntry("with_a11y").accessibility!.hint)
 
         let without = await service.string(for: "no_a11y")
-        XCTAssertEqual(without.labelOrDefault, "Plain Text") // falls back to text
+        XCTAssertEqual(without.labelOrDefault, TestData.fixtureEntry("no_a11y").text) // falls back to text
         XCTAssertEqual(without.hintOrEmpty, "")
     }
 
@@ -248,20 +229,20 @@ final class RemoteStringsServiceTests: XCTestCase {
 
     func testFullFallbackChainPriority() async {
         let defaults = FakeDefaults(payload: TestData.payload(strings: [
-            "key": TestData.entry("Default"),
-            "only_default": TestData.entry("Only In Defaults")
+            "key": TestData.fixtureEntry("fallback.default"),
+            "only_default": TestData.fixtureEntry("fallback.only_default")
         ]))
         let cache = FakeCache()
         cache.stored = CachedPayload(
             payload: TestData.payload(strings: [
-                "key": TestData.entry("Cached")
+                "key": TestData.fixtureEntry("fallback.cached")
             ]),
             etag: nil,
             fetchedAt: Date()
         )
         let fetcher = FakeFetcher()
         let remotePayload = TestData.payload(strings: [
-            "key": TestData.entry("Remote")
+            "key": TestData.fixtureEntry("fallback.remote")
         ])
         fetcher.result = FetchResult(
             data: TestData.encodedPayload(remotePayload),
@@ -273,16 +254,16 @@ final class RemoteStringsServiceTests: XCTestCase {
 
         // Before refresh: cache wins over defaults
         let beforeRefresh = await service.string(for: "key")
-        XCTAssertEqual(beforeRefresh.text, "Cached")
+        XCTAssertEqual(beforeRefresh.text, TestData.fixtureEntry("fallback.cached").text)
 
         // After refresh: remote wins
         await service.refresh()
         let afterRefresh = await service.string(for: "key")
-        XCTAssertEqual(afterRefresh.text, "Remote")
+        XCTAssertEqual(afterRefresh.text, TestData.fixtureEntry("fallback.remote").text)
 
         // Key only in defaults still accessible
         let defaultOnly = await service.string(for: "only_default")
-        XCTAssertEqual(defaultOnly.text, "Only In Defaults")
+        XCTAssertEqual(defaultOnly.text, TestData.fixtureEntry("fallback.only_default").text)
 
         // Key in neither → missing placeholder
         let missing = await service.string(for: "nonexistent")
