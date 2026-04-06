@@ -11,7 +11,8 @@ final class FakeFetcher: RemoteStringsFetching, @unchecked Sendable {
     func fetch(from url: URL, etag: String?) async throws -> FetchResult {
         lastRequestedEtag = etag
         if let error { throw error }
-        return result!
+        guard let result else { throw URLError(.badServerResponse) }
+        return result
     }
 }
 
@@ -63,18 +64,32 @@ final class FakeLogger: RemoteStringsLogging, @unchecked Sendable {
 // MARK: - Test Helpers
 
 enum TestData {
-    static let endpoint = URL(string: "https://example.com/v1/strings")!
+    static let endpoint: URL = {
+        guard let url = URL(string: "https://example.com/v1/strings") else {
+            preconditionFailure("Invalid test endpoint URL")
+        }
+        return url
+    }()
 
     /// The canonical test fixture loaded from Fixtures/test-strings.json.
     static let fixture: RemoteStringsPayload = {
-        let url = Bundle.module.url(forResource: "test-strings", withExtension: "json", subdirectory: "Fixtures")!
-        let data = try! Data(contentsOf: url)
-        return try! JSONDecoder().decode(RemoteStringsPayload.self, from: data)
+        guard let url = Bundle.module.url(forResource: "test-strings", withExtension: "json", subdirectory: "Fixtures") else {
+            preconditionFailure("Missing test fixture: Fixtures/test-strings.json")
+        }
+        do {
+            let data = try Data(contentsOf: url)
+            return try JSONDecoder().decode(RemoteStringsPayload.self, from: data)
+        } catch {
+            preconditionFailure("Failed to load test fixture: \(error)")
+        }
     }()
 
     /// Returns the fixture entry for the given key, or crashes if missing.
     static func fixtureEntry(_ key: String) -> RemoteStringEntry {
-        fixture.strings[key]!
+        guard let entry = fixture.strings[key] else {
+            preconditionFailure("Missing fixture key: \(key)")
+        }
+        return entry
     }
 
     /// Returns a payload containing only the specified keys from the fixture.
@@ -103,6 +118,10 @@ enum TestData {
     }
 
     static func encodedPayload(_ payload: RemoteStringsPayload) -> Data {
-        try! JSONEncoder().encode(payload)
+        do {
+            return try JSONEncoder().encode(payload)
+        } catch {
+            preconditionFailure("Failed to encode payload: \(error)")
+        }
     }
 }

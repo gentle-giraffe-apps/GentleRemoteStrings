@@ -25,7 +25,7 @@ def _load_payload(locale: str = "en-US") -> tuple[dict, str]:
     data = json.loads(raw)
     # Validate against the Pydantic model
     RemoteStringsPayload(**data)
-    etag = hashlib.md5(raw.encode()).hexdigest()
+    etag = hashlib.sha256(raw.encode()).hexdigest()
     return data, f'"{etag}"'
 
 

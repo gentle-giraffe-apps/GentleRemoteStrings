@@ -217,8 +217,8 @@ final class RemoteStringsServiceTests: XCTestCase {
         await service.refresh()
 
         let with = await service.string(for: "with_a11y")
-        XCTAssertEqual(with.labelOrDefault, TestData.fixtureEntry("with_a11y").accessibility!.label)
-        XCTAssertEqual(with.hintOrEmpty, TestData.fixtureEntry("with_a11y").accessibility!.hint)
+        XCTAssertEqual(with.labelOrDefault, TestData.fixtureEntry("with_a11y").accessibility?.label)
+        XCTAssertEqual(with.hintOrEmpty, TestData.fixtureEntry("with_a11y").accessibility?.hint)
 
         let without = await service.string(for: "no_a11y")
         XCTAssertEqual(without.labelOrDefault, TestData.fixtureEntry("no_a11y").text) // falls back to text
