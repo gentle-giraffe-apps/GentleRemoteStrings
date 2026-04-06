@@ -27,7 +27,11 @@ jobs:
 
       - name: Generate iOS coverage report
         if: always()
-        run: xcresultparser --output-format cobertura TestResults.xcresult > ios-coverage.xml
+        run: |
+          xcresultparser \
+            --output-format cobertura \
+            -t GentleRemoteStrings \
+            TestResults.xcresult > ios-coverage.xml
 
       - name: Parse test results
         if: always()
