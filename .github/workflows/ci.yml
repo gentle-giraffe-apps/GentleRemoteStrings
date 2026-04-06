@@ -21,8 +21,13 @@ jobs:
           xcodebuild test \
             -scheme GentleRemoteStrings \
             -destination 'platform=macOS' \
+            -enableCodeCoverage YES \
             -resultBundlePath TestResults.xcresult \
             2>&1 | tee xcodebuild.log
+
+      - name: Generate iOS coverage report
+        if: always()
+        run: xcresultparser --output-format cobertura TestResults.xcresult > ios-coverage.xml
 
       - name: Parse test results
         if: always()
@@ -46,14 +51,38 @@ jobs:
           python-version: "3.12"
 
       - name: Install backend dependencies
-        run: pip install -r backend/requirements.txt
+        run: pip install -r backend/requirements.txt pytest-cov
 
       - name: Run backend tests
-        run: python -m pytest backend/tests/ -v --junitxml=backend-test-results.xml
+        run: |
+          python -m pytest backend/tests/ -v \
+            --junitxml=backend-test-results.xml \
+            --cov=backend/app \
+            --cov-report=xml:backend-coverage.xml
 
       - name: Upload backend test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: backend-test-results
-          path: backend-test-results.xml
+          path: |
+            backend-test-results.xml
+            backend-coverage.xml
+
+      - name: Upload iOS coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ios-coverage.xml
+          flags: ios
+          fail_ci_if_error: false
+
+      - name: Upload backend coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: backend-coverage.xml
+          flags: backend
+          fail_ci_if_error: false
