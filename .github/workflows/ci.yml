@@ -9,38 +9,51 @@ jobs:
   ios-demo-build:
     runs-on: macos-26
 
-#    defaults:
-#      run:
-#        working-directory: Demo
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Ruby (Bundler)
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.3"
-          bundler-cache: true
-          working-directory: Demo
-
       - name: Install xcresultparser
         run: brew install xcresultparser
 
-#      - name: Build (Demo)
-#        run: bundle exec fastlane ios build
+      - name: Run tests
+        run: |
+          xcodebuild test \
+            -scheme GentleRemoteStrings \
+            -destination 'platform=macOS' \
+            -resultBundlePath TestResults.xcresult \
+            2>&1 | tee xcodebuild.log
 
-#      - name: Run Package Tests
-#        run: bundle exec fastlane ios package_tests
+      - name: Parse test results
+        if: always()
+        run: |
+          xcresultparser --output-format junit TestResults.xcresult > test-results.xml
+          xcresultparser --output-format txt TestResults.xcresult
 
-#      - name: Convert coverage
-#        run: bundle exec fastlane coverage_xml
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            TestResults.xcresult
+            test-results.xml
+            xcodebuild.log
 
-#      - name: Upload coverage to Codecov
-#        uses: codecov/codecov-action@v5
-#        with:
-#          token: ${{ secrets.CODECOV_TOKEN }}
-#          files: ${{ github.workspace }}/coverage.xml
-#          root_dir: ${{ github.workspace }}
-#          verbose: true
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Run backend tests
+        run: python -m pytest backend/tests/ -v --junitxml=backend-test-results.xml
+
+      - name: Upload backend test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: backend-test-results.xml
