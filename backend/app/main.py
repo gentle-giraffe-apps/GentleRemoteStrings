@@ -43,7 +43,7 @@ async def get_strings(request: Request) -> Response:
             status_code=503,
             content={"error": "Content file not found"},
         )
-    except (json.JSONDecodeError, Exception) as exc:
+    except Exception as exc:
         return JSONResponse(
             status_code=503,
             content={"error": f"Invalid content: {exc}"},
