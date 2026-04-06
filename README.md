@@ -1,7 +1,8 @@
 # GentleRemoteStrings
 
 [![CI](https://github.com/gentle-giraffe-apps/GentleRemoteStrings/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/gentle-giraffe-apps/GentleRemoteStrings/actions/workflows/ci.yml)
-[![Coverage](https://codecov.io/gh/gentle-giraffe-apps/GentleRemoteStrings/branch/main/graph/badge.svg)](https://codecov.io/gh/gentle-giraffe-apps/GentleRemoteStrings)
+[![iOS Coverage](https://codecov.io/gh/gentle-giraffe-apps/GentleRemoteStrings/branch/main/graph/badge.svg?flag=ios)](https://codecov.io/gh/gentle-giraffe-apps/GentleRemoteStrings?flags[0]=ios)
+[![Backend Coverage](https://codecov.io/gh/gentle-giraffe-apps/GentleRemoteStrings/branch/main/graph/badge.svg?flag=backend)](https://codecov.io/gh/gentle-giraffe-apps/GentleRemoteStrings?flags[0]=backend)
 [![Swift](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
 ![iOS](https://img.shields.io/badge/iOS-15.0+-blue?logo=apple)
 ![SPM](https://img.shields.io/badge/SPM-Compatible-success)
