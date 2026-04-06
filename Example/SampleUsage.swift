@@ -35,12 +35,17 @@ let bundledDefaults = BundledDefaults(
 // MARK: - 2. Create the service with injected dependencies
 
 /// No singletons. No global state. You own the instance.
-let stringsService = RemoteStringsService(
-    endpoint: URL(string: "https://your-backend.onrender.com/v1/strings")!,
-    fetcher: URLSessionFetcher(),
-    cache: FileCacheStore(),
-    defaultsProvider: bundledDefaults
-)
+let stringsService: RemoteStringsService = {
+    guard let endpoint = URL(string: "https://your-backend.onrender.com/v1/strings") else {
+        preconditionFailure("Invalid endpoint URL")
+    }
+    return RemoteStringsService(
+        endpoint: endpoint,
+        fetcher: URLSessionFetcher(),
+        cache: FileCacheStore(),
+        defaultsProvider: bundledDefaults
+    )
+}()
 
 // MARK: - 3. Use in your app
 

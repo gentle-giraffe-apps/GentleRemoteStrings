@@ -5,7 +5,9 @@ public struct FileCacheStore: RemoteStringsCaching {
     private let fileURL: URL
 
     public init(directory: URL? = nil, filename: String = "gentle_remote_strings_cache.json") {
-        let dir = directory ?? FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        guard let dir = directory ?? FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else {
+            preconditionFailure("System caches directory unavailable")
+        }
         self.fileURL = dir.appendingPathComponent(filename)
     }
 
