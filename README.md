@@ -1,5 +1,15 @@
 # GentleRemoteStrings
 
+[![CI](https://github.com/gentle-giraffe-apps/GentleRemoteStrings/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/gentle-giraffe-apps/GentleRemoteStrings/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/gentle-giraffe-apps/GentleRemoteStrings/branch/main/graph/badge.svg)](https://codecov.io/gh/gentle-giraffe-apps/GentleRemoteStrings)
+[![Swift](https://img.shields.io/badge/Swift-5.9+-orange.svg)](https://swift.org)
+![iOS](https://img.shields.io/badge/iOS-15.0+-blue?logo=apple)
+![SPM](https://img.shields.io/badge/SPM-Compatible-success)
+[![DeepSource Static Analysis](https://img.shields.io/badge/DeepSource-Static%20Analysis-0A2540?logo=deepsource&logoColor=white)](https://deepsource.io/)
+[![DeepSource](https://app.deepsource.com/gh/gentle-giraffe-apps/GentleRemoteStrings.svg/?label=active+issues&show_trend=true)](https://app.deepsource.com/gh/gentle-giraffe-apps/GentleRemoteStrings/)
+![Commit activity](https://img.shields.io/github/commit-activity/y/gentle-giraffe-apps/GentleRemoteStrings)
+![Last commit](https://img.shields.io/github/last-commit/gentle-giraffe-apps/GentleRemoteStrings)
+
 A lightweight, testable remote strings system for Swift apps, backed by a simple Python service. Designed to avoid the operational and architectural complexity of full remote config platforms.
 
 ## Why This Exists
