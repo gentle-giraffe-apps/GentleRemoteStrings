@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  ios-demo-build:
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install xcresultparser
+        run: brew install xcresultparser
+
+      - name: Run tests
+        run: |
+          xcodebuild test \
+            -scheme GentleRemoteStrings \
+            -destination 'platform=macOS' \
+            -resultBundlePath TestResults.xcresult \
+            2>&1 | tee xcodebuild.log
+
+      - name: Parse test results
+        if: always()
+        run: |
+          xcresultparser --output-format junit TestResults.xcresult > test-results.xml
+          xcresultparser --output-format txt TestResults.xcresult
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            TestResults.xcresult
+            test-results.xml
+            xcodebuild.log
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Run backend tests
+        run: python -m pytest backend/tests/ -v --junitxml=backend-test-results.xml
+
+      - name: Upload backend test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: backend-test-results.xml
