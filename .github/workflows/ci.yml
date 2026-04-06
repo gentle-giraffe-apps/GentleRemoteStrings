@@ -9,9 +9,9 @@ jobs:
   ios-demo-build:
     runs-on: macos-26
 
-    defaults:
-      run:
-        working-directory: Demo
+#    defaults:
+#      run:
+#        working-directory: Demo
 
     steps:
       - name: Checkout
