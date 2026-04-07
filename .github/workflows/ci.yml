@@ -80,6 +80,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ios-coverage.xml
           flags: ios
+          disable_search: true
           fail_ci_if_error: false
 
       - name: Upload backend coverage to Codecov
@@ -89,4 +90,5 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: backend-coverage.xml
           flags: backend
+          disable_search: true
           fail_ci_if_error: false
