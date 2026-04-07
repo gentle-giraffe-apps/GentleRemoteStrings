@@ -3,7 +3,7 @@ import XCTest
 
 final class FileCacheStoreTests: XCTestCase {
 
-    private var tempDir: URL!
+    private var tempDir: URL = FileManager.default.temporaryDirectory
 
     override func setUp() {
         super.setUp()
