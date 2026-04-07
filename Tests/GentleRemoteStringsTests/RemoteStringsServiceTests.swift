@@ -225,6 +225,97 @@ final class RemoteStringsServiceTests: XCTestCase {
         XCTAssertEqual(without.hintOrEmpty, "")
     }
 
+    // MARK: - Refresh with no data (non-304)
+
+    func testRefreshWithNilDataLogsAndReturns() async {
+        let fetcher = FakeFetcher()
+        fetcher.result = FetchResult(data: nil, etag: nil, notModified: false)
+        let (service, _, _, logger) = makeService(fetcher: fetcher)
+
+        await service.refresh()
+
+        XCTAssertTrue(logger.messages.contains { $0.contains("no data") })
+    }
+
+    // MARK: - Missing key logs
+
+    func testMissingKeyLogsMessage() async {
+        let (service, _, _, logger) = makeService()
+        _ = await service.string(for: "nonexistent")
+        XCTAssertTrue(logger.messages.contains { $0.contains("Missing key") })
+    }
+
+    // MARK: - 304 logs message
+
+    func testNotModifiedLogsMessage() async {
+        let fetcher = FakeFetcher()
+        fetcher.result = FetchResult(data: nil, etag: "\"e\"", notModified: true)
+        let (service, _, _, logger) = makeService(fetcher: fetcher)
+
+        await service.refresh()
+
+        XCTAssertTrue(logger.messages.contains { $0.contains("304") })
+    }
+
+    // MARK: - Refresh logs success
+
+    func testRefreshLogsSuccessMessage() async {
+        let fetcher = FakeFetcher()
+        let payload = TestData.fixturePayload(keys: ["greeting"])
+        fetcher.result = FetchResult(
+            data: TestData.encodedPayload(payload),
+            etag: nil,
+            notModified: false
+        )
+        let (service, _, _, logger) = makeService(fetcher: fetcher)
+
+        await service.refresh()
+
+        XCTAssertTrue(logger.messages.contains { $0.contains("Refreshed and cached") })
+    }
+
+    // MARK: - Cache load logs
+
+    func testCacheLoadLogsMessage() async {
+        let cache = FakeCache()
+        cache.stored = CachedPayload(
+            payload: TestData.fixturePayload(keys: ["cached.key"]),
+            etag: nil,
+            fetchedAt: Date()
+        )
+        let (service, _, _, logger) = makeService(cache: cache)
+
+        _ = await service.string(for: "cached.key")
+
+        XCTAssertTrue(logger.messages.contains { $0.contains("Loaded") })
+    }
+
+    // MARK: - loadFromCache only runs once
+
+    func testLoadFromCacheOnlyRunsOnce() async {
+        let cache = FakeCache()
+        cache.stored = CachedPayload(
+            payload: TestData.fixturePayload(keys: ["cached.key"]),
+            etag: nil,
+            fetchedAt: Date()
+        )
+        let (service, _, _, logger) = makeService(cache: cache)
+
+        _ = await service.string(for: "cached.key")
+        _ = await service.string(for: "cached.key")
+
+        let loadMessages = logger.messages.filter { $0.contains("Loaded") }
+        XCTAssertEqual(loadMessages.count, 1)
+    }
+
+    // MARK: - Empty cache loads without logging
+
+    func testEmptyCacheDoesNotLogLoaded() async {
+        let (service, _, _, logger) = makeService()
+        _ = await service.string(for: "any")
+        XCTAssertFalse(logger.messages.contains { $0.contains("Loaded") })
+    }
+
     // MARK: - Remote beats cache beats defaults
 
     func testFullFallbackChainPriority() async {
